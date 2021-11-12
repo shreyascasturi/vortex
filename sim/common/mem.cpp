@@ -4,7 +4,6 @@
 #include <fstream>
 #include <assert.h>
 #include "util.h"
-
 using namespace vortex;
 
 RamMemDevice::RamMemDevice(const char *filename, uint32_t wordSize) 

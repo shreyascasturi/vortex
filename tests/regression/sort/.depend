@@ -1,0 +1,1 @@
+main.o: main.cpp /home/nonsudo/vortex/driver/include/vortex.h common.h
