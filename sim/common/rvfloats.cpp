@@ -1,4 +1,5 @@
 #include "rvfloats.h"
+#include "bf16.h"
 #include <stdio.h>
 
 extern "C" {
@@ -8,6 +9,7 @@ extern "C" {
 }
 
 #define F32_SIGN 0x80000000
+#define F16_SIGN 0x8000
 
 inline float32_t to_float32_t(uint32_t x) { return float32_t{x}; }
 
@@ -220,6 +222,80 @@ uint32_t rv_fsgnjx(uint32_t a, uint32_t b) {
   int r = (sign1 ^ sign2) | (a & ~F32_SIGN);
 
   return r;
+}
+
+uint32_t rv_bf16_fmadd(uint32_t a, uint32_t b, uint32_t c, uint32_t frm, uint32_t* fflags) {
+  uint32_t res = rv_fmadd(a & 0xFFFF0000, b & 0xFFFF0000, c & 0xFFFF0000, frm, fflags);
+  return res & 0xFFFF0000;
+  
+  
+  bool signA, signB, signC, signProd;
+  int_fast16_t expA, expB, expC, expProd;
+  int_fast16_t manA, manB, manC, manProd;
+
+  signA = signBF16UI(a);
+  signB = signBF16UI(b);
+  signC = signBF16UI(c);
+
+  expA = expBF16UI(a);
+  expB = expBF16UI(b);
+  expC = expBF16UI(c);
+
+  manA = manBF16UI(a);
+  manB = manBF16UI(b);
+  manA = (manA | 0x80) << 3;
+  manC = manBF16UI(c);
+
+  signProd = signA ^ signB;
+
+  if(expA == 0xFF){
+    if(manA || (expB == 0xFF && manB)){
+      // propagate NaN AB
+    }
+    // infinite
+  }
+
+  if(expB == 0xFF){
+    if(manB){
+      // propagate NaN AB
+    }
+    // infinite
+  }
+
+  if(expC == 0xFF){
+    if(manC){
+      // propagate NaN C
+    }
+
+    // infinite C
+  }
+
+  /* At this point, we know there isn't an input param that is NaN or infinite, so just perform the
+   * operations as normal.
+   */
+
+  if(expA == 0x0){
+    if(manA == 0x0){
+      // product is zero
+    }
+    // normalize 
+  }
+
+  if(expB == 0x0){
+    if(manB == 0x0){
+      // product is zero
+    }
+    // normalize 
+  }
+
+  /* Now, we've successfully normalized the floats we're multiplying, so perform that operation
+   */
+
+  // Add exponents
+  expProd = expA + expB - 0x7E;
+  
+  // Multiply the mantisas
+  manA = (manA | 0x80) << 3; // Convert mantissa to 
 }
 
 #ifdef __cplusplus

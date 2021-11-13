@@ -34,6 +34,8 @@ uint32_t rv_feq(uint32_t a, uint32_t b, uint32_t* fflags);
 uint32_t rv_fmin(uint32_t a, uint32_t b, uint32_t* fflags);
 uint32_t rv_fmax(uint32_t a, uint32_t b, uint32_t* fflags);
 
+uint32_t rv_bf16_fmadd(uint32_t a, uint32_t b, uint32_t c, uint32_t frm, uint32_t* fflags);
+
 #ifdef __cplusplus
 }
 #endif

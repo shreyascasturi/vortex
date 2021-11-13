@@ -597,7 +597,15 @@ void Warp::execute(const Instr &instr, Pipeline *pipeline) {
       Word fflags = 0;
       switch (opcode) {
       case FMADD:
-        rddata = rv_fmadd(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);
+        // NOTE: If this was being implemented for all FM operations, it'd be better to separate
+        // this conditional out of these cases, but for now, while just doing FMADD, we'll leave it
+        // here.
+
+        if(core_->get_csr(CSR_BF16, t, id_) == 1){
+          rddata = rv_bf16_fmadd(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);
+        } else {
+          rddata = rv_fmadd(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);
+        }
         break;
       case FMSUB:
         rddata = rv_fmsub(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);

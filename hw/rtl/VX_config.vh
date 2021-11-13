@@ -128,6 +128,7 @@
 `define CSR_FFLAGS      12'h001
 `define CSR_FRM         12'h002
 `define CSR_FCSR        12'h003
+`define CSR_BF16        12'h004
 
 `define CSR_SATP        12'h180
 
