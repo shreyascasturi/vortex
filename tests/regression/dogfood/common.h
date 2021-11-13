@@ -12,4 +12,6 @@ typedef struct {
   uint32_t dst_ptr;  
 } kernel_arg_t;
 
+#define BF16_TEST 1
+
 #endif

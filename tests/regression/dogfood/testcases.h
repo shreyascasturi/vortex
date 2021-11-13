@@ -271,8 +271,21 @@ public:
     auto a = (float*)src1;
     auto b = (float*)src2;
     auto c = (float*)dst;
+
+
+    //vx_csr_read(CSR_BF16)
     for (int i = 0; i < n; ++i) {
-      auto ref = a[i] * b[i] + b[i];
+
+#ifdef BF16_TEST
+      auto r1 = (a[i] * b[i] + b[i]);
+      auto r2 = *(uint32_t*) &r1;
+      auto r3 = (r2 & 0xFFFF0000);
+      auto r4 = *(float*) &r3;
+      auto ref = r4;
+#else
+      auto ref = (a[i] * b[i] + b[i]);
+#endif
+
       if (!almost_equal(c[i], ref)) {
         std::cout << "error at result #" << i << ": expected " << ref << ", actual " << c[i] << ", a=" << a[i] << ", b=" << b[i] << std::endl;
         ++errors;

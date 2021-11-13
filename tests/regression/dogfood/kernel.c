@@ -330,5 +330,9 @@ static const PFN_Kernel sc_tests[] = {
 
 void main() {
 	kernel_arg_t* arg = (kernel_arg_t*)KERNEL_ARG_DEV_MEM_ADDR;
+
+	// enable BF16
+	vx_csr_write(CSR_BF16, BF16_TEST);
+
 	vx_spawn_tasks(arg->num_tasks, (vx_spawn_tasks_cb)sc_tests[arg->testid], arg);
 }
