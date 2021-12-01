@@ -10,7 +10,7 @@ LDFLAGS += ../common/softfloat/build/Linux-x86_64-GCC/softfloat.a
 
 TOP = vx_cache_sim
 
-SRCS = ../common/util.cpp ../common/mem.cpp ../common/rvfloats.cpp 
+SRCS = ../common/util.cpp ../common/mem.cpp ../common/rvfloats.cpp  ../common/bf16.cpp
 SRCS += args.cpp pipeline.cpp warp.cpp core.cpp decode.cpp execute.cpp main.cpp
 
 OBJS := $(patsubst %.cpp, obj_dir/%.o, $(notdir $(SRCS)))
