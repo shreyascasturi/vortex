@@ -64,6 +64,7 @@ module VX_csr_data #(
                 `CSR_FFLAGS:   fcsr[write_wid][`FFLAGS_BITS-1:0] <= write_data[`FFLAGS_BITS-1:0];
                 `CSR_FRM:      fcsr[write_wid][`INST_FRM_BITS+`FFLAGS_BITS-1:`FFLAGS_BITS] <= write_data[`INST_FRM_BITS-1:0];
                 `CSR_FCSR:     fcsr[write_wid] <= write_data[`FFLAGS_BITS+`INST_FRM_BITS-1:0];
+                `CSR_BF16:     fcsr[write_wid] <= write_data[`FFLAGS_BITS+`INST_FRM_BITS-1:0];
                 `CSR_SATP:     csr_satp       <= write_data[`CSR_WIDTH-1:0];
                 `CSR_MSTATUS:  csr_mstatus    <= write_data[`CSR_WIDTH-1:0];
                 `CSR_MEDELEG:  csr_medeleg    <= write_data[`CSR_WIDTH-1:0];
@@ -115,6 +116,7 @@ module VX_csr_data #(
             `CSR_FFLAGS     : read_data_r = 32'(fcsr[read_wid][`FFLAGS_BITS-1:0]);
             `CSR_FRM        : read_data_r = 32'(fcsr[read_wid][`INST_FRM_BITS+`FFLAGS_BITS-1:`FFLAGS_BITS]);
             `CSR_FCSR       : read_data_r = 32'(fcsr[read_wid]);
+            `CSR_BF16       : read_data_r = 32'(fcsr[read_wid]);
 
             `CSR_WTID       ,            
             `CSR_LTID       ,
