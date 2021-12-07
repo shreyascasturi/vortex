@@ -602,8 +602,10 @@ void Warp::execute(const Instr &instr, Pipeline *pipeline) {
         // here.
 
         if(core_->get_csr(CSR_BF16, t, id_) == 1){
+          std::cout << "bf16\n";
           rddata = rv_bf16_fmadd(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);
         } else {
+          std::cout << "non bf16\n";
           rddata = rv_fmadd(rsdata[0], rsdata[1], rsdata[2], frm, &fflags);
         }
         break;

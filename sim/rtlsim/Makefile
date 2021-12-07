@@ -30,7 +30,7 @@ FPU_INCLUDE = -I$(RTL_DIR)/fp_cores -I$(RTL_DIR)/fp_cores/fpnew/src/common_cells
 TEX_INCLUDE = -I$(RTL_DIR)/tex_unit
 RTL_INCLUDE = -I$(RTL_DIR) -I$(DPI_DIR) -I$(RTL_DIR)/libs -I$(RTL_DIR)/interfaces -I$(RTL_DIR)/cache -I$(RTL_DIR)/simulate $(FPU_INCLUDE) $(TEX_INCLUDE)
 
-SRCS = ../common/util.cpp ../common/mem.cpp ../common/rvfloats.cpp
+SRCS = ../common/util.cpp ../common/mem.cpp ../common/rvfloats.cpp ../common/bf16.cpp
 SRCS += $(DPI_DIR)/util_dpi.cpp $(DPI_DIR)/float_dpi.cpp
 SRCS += main.cpp simulator.cpp
 

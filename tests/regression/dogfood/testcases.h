@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 #include <limits>
+#include "common.h"
 
 union Float_t {    
     float f;
@@ -273,17 +274,23 @@ public:
     auto c = (float*)dst;
 
 
-    //vx_csr_read(CSR_BF16)
     for (int i = 0; i < n; ++i) {
 
 #ifdef BF16_TEST
-      auto r1 = (a[i] * b[i] + b[i]);
+      auto a16 = (*(uint32_t*)&a[i]) & 0xFFFF0000; 
+      auto b16 = (*(uint32_t*)&b[i]) & 0xFFFF0000; 
+      auto a_bf = *((float*)&a16);
+      auto b_bf = *((float*)&b16);
+
+      auto r1 = (a_bf * b_bf + b_bf);
       auto r2 = *(uint32_t*) &r1;
       auto r3 = (r2 & 0xFFFF0000);
       auto r4 = *(float*) &r3;
+      std::cout << "truncated " << r1 << " to " << r4 << ".\n";
       auto ref = r4;
 #else
       auto ref = (a[i] * b[i] + b[i]);
+      std::cout << "did not truncate " << ref << ".\n";
 #endif
 
       if (!almost_equal(c[i], ref)) {

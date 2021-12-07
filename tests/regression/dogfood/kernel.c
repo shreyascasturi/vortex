@@ -332,7 +332,11 @@ void main() {
 	kernel_arg_t* arg = (kernel_arg_t*)KERNEL_ARG_DEV_MEM_ADDR;
 
 	// enable BF16
-	vx_csr_write(CSR_BF16, BF16_TEST);
+	#ifdef BF16_TEST
+  printf("testing bf16\n");
+	vx_csr_write(CSR_BF16, 1);
+  vx_csr_write(CSR_FRM, 1);
+	#endif
 
 	vx_spawn_tasks(arg->num_tasks, (vx_spawn_tasks_cb)sc_tests[arg->testid], arg);
 }
