@@ -32,7 +32,13 @@ module VX_fpu_fpga #(
     localparam FPU_SQRT = 2;
     localparam FPU_CVT  = 3;
     localparam FPU_NCP  = 4;
-    localparam NUM_FPC  = 5;
+    localparam FPU_BF16_FMA  = 5;
+    //localparam FPU_BF16_DIV  = 6;
+    //localparam FPU_BF16_SQRT = 7;
+    //localparam FPU_BF16_CVT  = 8;
+    //localparam FPU_BF16_NCP  = 9;
+
+    localparam NUM_FPC  = 2*5;
     localparam FPC_BITS = `LOG2UP(NUM_FPC);
     
     wire [NUM_FPC-1:0] per_core_ready_in;
@@ -40,12 +46,17 @@ module VX_fpu_fpga #(
     wire [NUM_FPC-1:0][TAGW-1:0] per_core_tag_out;
     reg [NUM_FPC-1:0] per_core_ready_out;
     wire [NUM_FPC-1:0] per_core_valid_out;
+    wire is_bf16;
     
     wire [NUM_FPC-1:0] per_core_has_fflags;  
     fflags_t [NUM_FPC-1:0][`NUM_THREADS-1:0] per_core_fflags;  
 
     reg [FPC_BITS-1:0] core_select;
     reg do_madd, do_sub, do_neg, is_itof, is_signed;
+
+
+    // TEMPORARY: Set bf16 w/out control register
+    assign is_bf16 = 1'b1;
 
     always @(*) begin
         do_madd   = 0;
@@ -54,19 +65,19 @@ module VX_fpu_fpga #(
         is_itof   = 0;
         is_signed = 0;
         case (op_type)
-            `INST_FPU_ADD:    begin core_select = FPU_FMA; end
-            `INST_FPU_SUB:    begin core_select = FPU_FMA; do_sub = 1; end
-            `INST_FPU_MUL:    begin core_select = FPU_FMA; do_neg = 1; end
-            `INST_FPU_MADD:   begin core_select = FPU_FMA; do_madd = 1; end
-            `INST_FPU_MSUB:   begin core_select = FPU_FMA; do_madd = 1; do_sub = 1; end
-            `INST_FPU_NMADD:  begin core_select = FPU_FMA; do_madd = 1; do_neg = 1; end
-            `INST_FPU_NMSUB:  begin core_select = FPU_FMA; do_madd = 1; do_sub = 1; do_neg = 1; end
-            `INST_FPU_DIV:    begin core_select = FPU_DIV; end
-            `INST_FPU_SQRT:   begin core_select = FPU_SQRT; end
-            `INST_FPU_CVTWS:  begin core_select = FPU_CVT; is_signed = 1; end
-            `INST_FPU_CVTWUS: begin core_select = FPU_CVT; end
-            `INST_FPU_CVTSW:  begin core_select = FPU_CVT; is_itof = 1; is_signed = 1; end
-            `INST_FPU_CVTSWU: begin core_select = FPU_CVT; is_itof = 1; end
+            `INST_FPU_ADD:    begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); end
+            `INST_FPU_SUB:    begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_sub = 1; end
+            `INST_FPU_MUL:    begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_neg = 1; end
+            `INST_FPU_MADD:   begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_madd = 1; end
+            `INST_FPU_MSUB:   begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_madd = 1; do_sub = 1; end
+            `INST_FPU_NMADD:  begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_madd = 1; do_neg = 1; end
+            `INST_FPU_NMSUB:  begin core_select = FPU_FMA + (is_bf16 ? 5 : 0); do_madd = 1; do_sub = 1; do_neg = 1; end
+            `INST_FPU_DIV:    begin core_select = FPU_DIV + (is_bf16 ? 5 : 0); end
+            `INST_FPU_SQRT:   begin core_select = FPU_SQRT+ (is_bf16 ? 5 : 0); end
+            `INST_FPU_CVTWS:  begin core_select = FPU_CVT + (is_bf16 ? 5 : 0); is_signed = 1; end
+            `INST_FPU_CVTWUS: begin core_select = FPU_CVT + (is_bf16 ? 5 : 0); end
+            `INST_FPU_CVTSW:  begin core_select = FPU_CVT + (is_bf16 ? 5 : 0); is_itof = 1; is_signed = 1; end
+            `INST_FPU_CVTSWU: begin core_select = FPU_CVT + (is_bf16 ? 5 : 0); is_itof = 1; end
             default:     begin core_select = FPU_NCP; end
         endcase
     end
@@ -99,6 +110,30 @@ module VX_fpu_fpga #(
         .tag_out    (per_core_tag_out[FPU_FMA]),
         .ready_out  (per_core_ready_out[FPU_FMA]),
         .valid_out  (per_core_valid_out[FPU_FMA])
+    );
+
+    VX_fpbf16_fma #(
+        .TAGW (TAGW),
+        .LANES(`NUM_THREADS)
+    ) fp_bf16_fma (
+        .clk        (clk), 
+        .reset      (fma_reset),   
+        .valid_in   (valid_in && (core_select == FPU_BF16_FMA)),
+        .ready_in   (per_core_ready_in[FPU_BF16_FMA]),    
+        .tag_in     (tag_in),  
+        .frm        (frm),
+        .do_madd    (do_madd),
+        .do_sub     (do_sub),
+        .do_neg     (do_neg),
+        .dataa      (dataa), 
+        .datab      (datab),    
+        .datac      (datac),   
+        .has_fflags (per_core_has_fflags[FPU_BF16_FMA]),
+        .fflags     (per_core_fflags[FPU_BF16_FMA]),
+        .result     (per_core_result[FPU_BF16_FMA]),
+        .tag_out    (per_core_tag_out[FPU_BF16_FMA]),
+        .ready_out  (per_core_ready_out[FPU_BF16_FMA]),
+        .valid_out  (per_core_valid_out[FPU_BF16_FMA])
     );
 
     VX_fp_div #(
