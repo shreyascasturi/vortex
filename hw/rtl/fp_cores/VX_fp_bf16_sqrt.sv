@@ -38,6 +38,7 @@ module VX_fp_bf16_sqrt #(
     output wire valid_out
 ); 
 
+    // this is used to create a vector of zeroes to compare against
     localparam CONST_32 = 32;
     localparam CONST_16 = 16;
 
@@ -47,19 +48,20 @@ module VX_fp_bf16_sqrt #(
     wire enable = ~stall;
     wire [CONST_32-1:0] zero_constant_32 = {CONST_32{1'b0}};
     wire [CONST_16-1:0] zero_constant_16 = {CONST_16{1'b0}};
+ 
     // for each lane, do a sqrt on the given number.
     // we always work on the upper 16 bits
     for (genvar i = 0; i < LANES; i++) begin
-       wire fp_32_number = dataa[i]; 
+       wire[31:0] fp_32_number = dataa[i]; 
        
-       wire upper_16_bits = fp_32_number[31:16];
+       wire[15:0] upper_16_bits = fp_32_number[31:16];
        
        // to be clear, rust library uses a "get_normalized_significand". 
        // not sure if we need to
        // worry about this
-       wire exponent = upper_16_bits[14:7]; 
+       wire[7:0] exponent = upper_16_bits[14:7]; 
 
-       wire mantissa = upper_16_bits[6:0];
+       wire[6:0] mantissa = upper_16_bits[6:0];
 
        wire sign = upper_16_bits[15];
 
@@ -115,6 +117,8 @@ module VX_fp_bf16_sqrt #(
 
         // while half bit does not equal 0
        while (half_bit != 0) begin
+           // if this "result" is greater than some addition
+           // decrement, add to temp result.
            if (half_sig_minus_result >= (temp_result + half_bit)) begin
                half_sig_minus_result = half_sig_minus_result - (temp_result + half_bit);
                temp_result = temp_result + (half_bit << 1);
